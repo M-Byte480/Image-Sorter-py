@@ -13,9 +13,13 @@ def set_creation_time(dest_path, src_path):
 
 
 def main() -> None:
-    if len(sys.argv) != 3:
-        print("Usage: python main.py <absolute_source_folder_root> <absolute_destination_folder_root>")
+    command = "none"
+    if len(sys.argv) < 3:
+        print("Usage: python main.py <absolute_source_folder_root> <absolute_destination_folder_root> --adv")
         exit(1)
+    if len(sys.argv) == 4:
+        command = sys.argv[3][:3]
+
 
     sourceFolderRoot = sys.argv[1]
     destinationFolderRoot = sys.argv[2]
@@ -28,7 +32,6 @@ def main() -> None:
         os.mkdir(destinationFolderRoot)
 
     created_dirs = set()
-
 
     for (dirPath, subDir, filenames) in os.walk(sourceFolderRoot):
         for filename in filenames:
@@ -61,8 +64,11 @@ def main() -> None:
             year_str = str(earlier_time.year)
             month_str = f"{earlier_time.month:02d}"
 
-            # Create dirs if not exist
-            dest_dir = os.path.join(destinationFolderRoot, year_str, month_str)
+            subFolder = ""
+            if command == "--a":
+                subFolder = getsubdir(filename)
+
+            dest_dir = os.path.join(destinationFolderRoot, subFolder, year_str, month_str)
 
             if dest_dir not in created_dirs:
                 try:
@@ -78,9 +84,18 @@ def main() -> None:
             try:
                 shutil.copy2(filePath, dest_file_path)
                 set_creation_time(dest_file_path, filePath)
+                os.utime(dest_file_path, (creation_time, modified_time))
             except OSError:
                 print(f"Error copying {filePath} to {dest_file_path}")
 
+
+def getsubdir(filename: str):
+    if "Screenshot" in filename:
+        return "screenshots"
+    elif "Screen_Recording" in filename:
+        return "screen_recordings"
+    else:
+        return "pictures"
 
 
 if __name__ == "__main__":
